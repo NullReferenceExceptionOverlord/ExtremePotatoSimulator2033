@@ -37,8 +37,10 @@
             Console.WriteLine($"Total games: {simulationResult.FirstPlayerWins:0,0} - {simulationResult.SecondPlayerWins:0,0}");
             Console.WriteLine($"Rounds played: {simulationResult.RoundsPlayed:0,0}");
             Console.WriteLine(
-                $"Total round points: {simulationResult.FirstPlayerTotalRoundPoints:0,0} - {simulationResult.SecondPlayerTotalRoundPoints:0,0}");
+                $"Total round points (Our player): {simulationResult.FirstPlayerTotalRoundPoints:0,0} - {simulationResult.SecondPlayerTotalRoundPoints:0,0}");
             Console.WriteLine(new string('=', 75));
+
+            Console.ReadKey();
         }
     }
 }

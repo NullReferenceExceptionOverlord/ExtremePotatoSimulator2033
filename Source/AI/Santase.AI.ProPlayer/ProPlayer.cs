@@ -4,20 +4,20 @@
     using System.Collections.Generic;
     using Logic.Cards;
     using Santase.Logic.Players;
+    using Logic.Extensions;
+    using System.Linq;
 
     public class ProPlayer : BasePlayer
     {
-        public override string Name
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public override string Name => "DonaldThrumpForPrez!";
+        
 
         public override PlayerAction GetTurn(PlayerTurnContext context)
         {
-            throw new NotImplementedException();
+            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
+            var shuffledCards = possibleCardsToPlay.Shuffle();
+            var cardToPlay = shuffledCards.First();
+            return this.PlayCard(cardToPlay);
         }
 
         public override void StartGame(string otherPlayerIdentifier)

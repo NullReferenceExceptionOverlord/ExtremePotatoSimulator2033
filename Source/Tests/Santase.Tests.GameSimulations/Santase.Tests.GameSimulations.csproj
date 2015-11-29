@@ -51,6 +51,7 @@
     <Compile Include="GameSimulators\DummyPlayersGameSimulator.cs" />
     <Compile Include="FileLogger.cs" />
     <Compile Include="GameSimulators\GameSimulationResult.cs" />
+    <Compile Include="GameSimulators\GenericGameSimulator.cs" />
     <Compile Include="GameSimulators\IGameSimulator.cs" />
     <Compile Include="GameSimulators\SmartAndDummyPlayerChangingTrumpSimulator.cs" />
     <Compile Include="Program.cs" />
@@ -68,6 +69,10 @@
     <ProjectReference Include="..\..\AI\Santase.AI.DummyPlayer\Santase.AI.DummyPlayer.csproj">
       <Project>{cc90f6aa-0308-4cf0-95b4-f61b895b62eb}</Project>
       <Name>Santase.AI.DummyPlayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\AI\Santase.AI.ProPlayer\Santase.AI.ProPlayer.csproj">
+      <Project>{5bab287d-3534-4e66-b56a-e38db3ba0edb}</Project>
+      <Name>Santase.AI.ProPlayer</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\AI\Santase.AI.SmartPlayer\Santase.AI.SmartPlayer.csproj">
       <Project>{d58bcb77-06d8-4af0-9f9c-13197475deb2}</Project>

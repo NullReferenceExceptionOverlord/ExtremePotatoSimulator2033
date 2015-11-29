@@ -49,7 +49,7 @@
             }
         }
 
-		public CardMemorizer(Card trumpCard, IEnumerable<Card> initialHand)
+		public CardMemorizer(Card trumpCard, ICollection<Card> initialHand)
 		{
 			this.TrumpCard = trumpCard;
 			this.RemainingTrumpCardsCount = 0;

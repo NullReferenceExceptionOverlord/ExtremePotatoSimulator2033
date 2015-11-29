@@ -2,6 +2,7 @@
 {
     using System;
 
+	using Santase.Logic.GameMechanics;
     using Santase.AI.SmartPlayer;
     using Santase.AI.ProPlayer;
 
@@ -13,19 +14,14 @@
 
 		public static void Main()
         {
-            // For easier debugging start a single game:
-            //// new SantaseGame(new SmartPlayer(), new SmartPlayerOld()).Start();
+			// For easier debugging start a single game:
+			//new SantaseGame(new ProPlayer(), new SmartPlayer()).Start();
 
-            SimulateGames(new GenericGameSimulator<ProPlayer, SmartPlayer>());
+			SimulateGames(new GenericGameSimulator<ProPlayer, SmartPlayer>());
+			Console.WriteLine("Closed games: {0}", GlobalStats.GamesClosedByPlayer);
+		}
 
-            Console.WriteLine("Closed games: {0}", GlobalStats.GamesClosedByPlayer);
-
-            //SimulateGames(new SmartAndDummyPlayerChangingTrumpSimulator());
-
-            //SimulateGames(new SmartAndDummyPlayersSimulator());
-        }
-
-        private static void SimulateGames(IGameSimulator gameSimulator)
+		private static void SimulateGames(IGameSimulator gameSimulator)
         {
 			int simulationsCount = 100; // DefaultSimulationsCount
 

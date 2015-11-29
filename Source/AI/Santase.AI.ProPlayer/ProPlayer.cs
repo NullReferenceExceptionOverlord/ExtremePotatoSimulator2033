@@ -9,12 +9,11 @@
 
     public class ProPlayer : BasePlayer
     {
-        private CardMemoizer cardMemo;
+		private CardMemorizer cardMemo;
 
-        public ProPlayer()
+		public ProPlayer()
         {
-            this.cardMemo = new CardMemoizer();
-        }
+		}
 
         public override string Name => "DonaldThrumpForPrez!";
 
@@ -33,6 +32,9 @@
             var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
             var shuffledCards = possibleCardsToPlay.Shuffle();
             var cardToPlay = shuffledCards.First();
+
+			this.cardMemo.LogPlayedCard(cardToPlay);
+
             return this.PlayCard(cardToPlay);
         }
 
@@ -44,26 +46,32 @@
         public override void StartRound(ICollection<Card> cards, Card trumpCard, int myTotalPoints, int opponentTotalPoints)
         {
             base.StartRound(cards, trumpCard, myTotalPoints, opponentTotalPoints);
+
+			this.cardMemo = new CardMemorizer(trumpCard, cards);
         }
 
-        public override void AddCard(Card card)
-        {
-            base.AddCard(card);
-        }
+		public override void AddCard(Card card)
+		{
+			base.AddCard(card);
+
+			this.cardMemo.LogDrawnCard(card);
+		}
 
         public override void EndTurn(PlayerTurnContext context)
         {
-            var isFirstPlayerThrumpCard = context.FirstPlayedCard.Suit == context.TrumpCard.Suit;
-            var isSecondPlayerThrumpCard = context.FirstPlayedCard.Suit == context.TrumpCard.Suit;
+			//this.cardMemo.RemoveCard(context.FirstPlayedCard, isFirstPlayerThrumpCard);
 
-            this.cardMemo.RemoveCard(context.FirstPlayedCard, isFirstPlayerThrumpCard);
-            this.cardMemo.RemoveCard(context.SecondPlayedCard, isSecondPlayerThrumpCard);
-            base.EndTurn(context);
+			if (context.SecondPlayedCard != null)
+			{
+				this.cardMemo.LogOpponentPlayedCard(context.SecondPlayedCard);
+			}
+
+			base.EndTurn(context);
         }
 
         public override void EndRound()
         {
-            this.cardMemo = new CardMemoizer();
+            //this.cardMemo = new CardMemoizer();
         }
 
         public override void EndGame(bool amIWinner)

@@ -1,13 +1,15 @@
 ﻿namespace Santase.AI.ProPlayer
 {
 	using System;
-    using System.Linq;
+	using System.Linq;
 	using System.Collections.Generic;
 
-    using Logic.Cards;
+	using Logic.Cards;
 
-    internal class CardMemorizer
+    public class CardMemorizer
     {
+		public const int InitialHandValidSize = 6;
+
         public static readonly CardType[] AllCardTypes =
         {
             CardType.Nine,
@@ -26,15 +28,15 @@
             CardSuit.Spade
         };
 
-        public static readonly CardCollection AllCards = new CardCollection();
+        public static readonly Tools.CardCollection AllCards = new Tools.CardCollection();
 
-		private Card trumpCard;
+		private Tools.CardCollection remainingCards;
 
-		private CardCollection remainingCards;
+		private Tools.CardCollection myHand;
 
-		private CardCollection myPlayedCards;
+		private Tools.CardCollection myPlayedCards;
 
-		private CardCollection opponentPlayedCards;
+		private Tools.CardCollection opponentPlayedCards;
 
         static CardMemorizer()
         {
@@ -49,50 +51,52 @@
 
 		public CardMemorizer(Card trumpCard, IEnumerable<Card> initialHand)
 		{
-			this.trumpCard = trumpCard;
+			this.TrumpCard = trumpCard;
 			this.RemainingTrumpCardsCount = 0;
+			this.TrumpSuit = this.TrumpCard.Suit;
 
-			this.remainingCards = new CardCollection();
-			this.myPlayedCards = new CardCollection();
-			this.opponentPlayedCards = new CardCollection();
+			this.remainingCards = new Tools.CardCollection();
+			this.myHand = new Tools.CardCollection();
+			this.myPlayedCards = new Tools.CardCollection();
+			this.opponentPlayedCards = new Tools.CardCollection();
 
 			foreach (var card in CardMemorizer.AllCards)
 			{
-				if (initialHand.Contains(card))
+				if (card.Equals(this.TrumpCard))
 				{
 					continue;
 				}
 
-				this.remainingCards.Add(card);
-
-				if (card.Suit == this.trumpCard.Suit)
+				if (initialHand.Contains(card))
 				{
-					this.RemainingTrumpCardsCount++;
+					this.myHand.Add(card);
 				}
+				else
+				{
+					this.remainingCards.Add(card);
+
+					if (card.Suit == this.TrumpCard.Suit)
+					{
+						this.RemainingTrumpCardsCount++;
+					}
+				}
+			}
+
+			if (this.myHand.Count != CardMemorizer.InitialHandValidSize)
+			{
+				throw new ArgumentException($"Initial hand size must be {CardMemorizer.InitialHandValidSize}.");
 			}
 		}
 
-		public Card TrumpCard
-	    {
-		    get
-		    {
-			    return this.trumpCard;
-		    }
+		public CardSuit TrumpSuit { get; private set; }
 
-		    set
-		    {
-				if (this.remainingCards.Contains(value))
-				{
-					this.NewCardDicovered(value);
-				}
+		public Card TrumpCard { get; private set; }
 
-				this.trumpCard = value;
-		    }
-	    }
+		public Card OldTrumpCard { get; private set; }
 
 	    public int RemainingTrumpCardsCount { get; private set; }
 
-	    public IEnumerable<Card> RemainingCards
+	    public IReadOnlyCollection<Card> RemainingCards
 	    {
 		    get
 		    {
@@ -100,15 +104,15 @@
 		    }
 	    }
 
-	    public int RemainingCardsCount
-	    {
-		    get
-		    {
-			    return this.remainingCards.Count;
-		    }
-	    }
+		public IReadOnlyCollection<Card> MyHand
+		{
+			get
+			{
+				return this.myHand;
+			}
+		}
 
-	    public IEnumerable<Card> MyPlayedCards
+		public IReadOnlyCollection<Card> MyPlayedCards
 	    {
 		    get
 		    {
@@ -116,15 +120,7 @@
 		    }
 	    }
 
-	    public int MyPlayedCardsCount
-	    {
-		    get
-		    {
-				return this.myPlayedCards.Count;
-		    }
-	    }
-
-	    public IEnumerable<Card> OpponentPlayedCards
+	    public IReadOnlyCollection<Card> OpponentPlayedCards
 	    {
 		    get
 		    {
@@ -132,43 +128,102 @@
 		    }
 	    }
 
-	    public int OpponentPlayedCardsCount
-	    {
-		    get
-		    {
-			    return this.opponentPlayedCards.Count;
-		    }
-	    }
+		public Card MyLastPlayedCard { get; set; }
 
-	    //// We can make it even more rtarded by making Ace card count 10s count etc
+		public ICollection<Card> GetMyHand()
+		{
+			return this.myHand.DeepClone(); 
+		}
 
 		public void LogDrawnCard(Card card)
 		{
-			if (card == null)
+			CardMemorizer.ValidateCardNotNull(card);
+
+			if (card.Equals(this.TrumpCard))
 			{
-				throw new ArgumentNullException("Can't log null card.");
+				this.TrumpCard = null;
+			}
+			else
+			{
+				this.NewCardDicovered(card);
 			}
 
-			this.NewCardDicovered(card);
+			this.myHand.Add(card);
 		}
 
 	    public void LogPlayedCard(Card card)
 	    {
+			bool removed = this.myHand.Remove(card);
+
+			if (!removed)
+			{
+				throw new ArgumentException($"Card must be present in {nameof(this.MyHand)}");
+			}
+
+			this.MyLastPlayedCard = card;
+
 		    this.myPlayedCards.Add(card);
 	    }
 
 	    public void LogOpponentPlayedCard(Card card)
 	    {
-			this.NewCardDicovered(card);
+			CardMemorizer.ValidateCardNotNull(card);
+
+			bool isTrumpCard = this.TrumpCard != null && this.TrumpCard.Equals(card);
+
+			if (!isTrumpCard && !card.Equals(this.OldTrumpCard))
+			{
+				this.NewCardDicovered(card);
+			}
+
+			if (isTrumpCard)
+			{
+				this.TrumpCard = null;
+			}
 
 			this.opponentPlayedCards.Add(card);
 	    }
 
-	    private void NewCardDicovered(Card card)
+	    public void LogTrumpChange()
 	    {
-			this.remainingCards.Remove(card);
+			Card lowestTrump = new Card(this.TrumpCard.Suit, CardType.Nine);
 
-			if (card.Suit == this.TrumpCard.Suit)
+			if (this.myHand.Contains(lowestTrump))
+			{
+				this.myHand.Remove(lowestTrump);
+				this.myHand.Add(this.TrumpCard);
+			}
+			else if (this.remainingCards.Contains(lowestTrump))
+			{
+				this.NewCardDicovered(lowestTrump);
+			}
+			else
+			{
+				throw new ArgumentException("The lowest trump card has alredy benn played.");
+			}
+
+			this.OldTrumpCard = this.TrumpCard;
+			this.TrumpCard = lowestTrump;
+	    }
+
+		private static void ValidateCardNotNull(Card card)
+		{
+			if (card == null)
+			{
+				throw new ArgumentNullException("Can't log null card.");
+			}
+		}
+
+		private void NewCardDicovered(Card card)
+	    {
+			bool removed = this.remainingCards.Remove(card);
+
+			if (!removed)
+			{
+				throw new ArgumentException($"Card Must be present in {nameof(this.RemainingCards)}.");
+			}
+
+			if (card.Suit == this.TrumpSuit)
 			{
 				this.RemainingTrumpCardsCount--;
 			}

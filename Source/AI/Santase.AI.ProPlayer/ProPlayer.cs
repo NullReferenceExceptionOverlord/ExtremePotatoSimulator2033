@@ -1,89 +1,116 @@
 ﻿namespace Santase.AI.ProPlayer
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
+    using System.Collections.Generic;
+
     using Logic.Cards;
     using Logic.Extensions;
-    using Santase.Logic.Players;
+    using Logic.Players;
+	using Logic.PlayerActionValidate;
 
-    public class ProPlayer : BasePlayer
+	public class ProPlayer : IPlayer
     {
-		private CardMemorizer cardMemo;
-
 		public ProPlayer()
         {
+			this.AnnounceValidator = new AnnounceValidator();
+			this.PlayerActionValidator = new PlayerActionValidator();
 		}
 
-        public override string Name => "DonaldThrumpForPrez!";
+		protected CardMemorizer CardMemorizer { get; set; }
 
-        public override PlayerAction GetTurn(PlayerTurnContext context)
+		protected IReadOnlyCollection<Card> MyHand
+		{
+			get
+			{
+				return this.CardMemorizer.MyHand;
+			}
+		}
+
+		protected IAnnounceValidator AnnounceValidator { get; }
+
+		protected IPlayerActionValidator PlayerActionValidator { get; }
+
+		public string Name => "Potato!";
+
+		public virtual void StartGame(string otherPlayerIdentifier)
+		{
+		}
+
+		public virtual void StartRound(ICollection<Card> cards, Card trumpCard, int myTotalPoints, int opponentTotalPoints)
+		{
+			this.CardMemorizer = new CardMemorizer(trumpCard, cards);
+		}
+
+		public virtual void AddCard(Card card)
+		{
+			this.CardMemorizer.LogDrawnCard(card);
+		}
+
+		public virtual PlayerAction GetTurn(PlayerTurnContext context)
         {
-            if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, this.Cards))
+            if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, this.CardMemorizer.GetMyHand()))
             {
-                return this.ChangeTrump(context.TrumpCard);
+                return this.ChangeTrump();
             }
 
-            if (this.CloseGame(context))
+            if (this.ShouldCloseGame(context))
             {
                 return this.CloseGame();
             }
 
-            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.Cards);
+            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.CardMemorizer.GetMyHand());
             var shuffledCards = possibleCardsToPlay.Shuffle();
             var cardToPlay = shuffledCards.First();
-
-			this.cardMemo.LogPlayedCard(cardToPlay);
 
             return this.PlayCard(cardToPlay);
         }
 
-        public override void StartGame(string otherPlayerIdentifier)
+		public virtual void EndTurn(PlayerTurnContext context)
         {
-            base.StartGame(otherPlayerIdentifier);
-        }
-
-        public override void StartRound(ICollection<Card> cards, Card trumpCard, int myTotalPoints, int opponentTotalPoints)
-        {
-            base.StartRound(cards, trumpCard, myTotalPoints, opponentTotalPoints);
-
-			this.cardMemo = new CardMemorizer(trumpCard, cards);
-        }
-
-		public override void AddCard(Card card)
-		{
-			base.AddCard(card);
-
-			this.cardMemo.LogDrawnCard(card);
-		}
-
-        public override void EndTurn(PlayerTurnContext context)
-        {
-			//this.cardMemo.RemoveCard(context.FirstPlayedCard, isFirstPlayerThrumpCard);
-
-			if (context.SecondPlayedCard != null)
+			if (this.CardMemorizer.TrumpCard != null && !this.CardMemorizer.TrumpCard.Equals(context.TrumpCard))
 			{
-				this.cardMemo.LogOpponentPlayedCard(context.SecondPlayedCard);
+				this.CardMemorizer.LogTrumpChange();
 			}
 
-			base.EndTurn(context);
-        }
+			Card opponentCard = this.CardMemorizer.MyLastPlayedCard.Equals(context.FirstPlayedCard) ? context.SecondPlayedCard : context.FirstPlayedCard;
 
-        public override void EndRound()
+			if (opponentCard != null)
+			{
+				this.CardMemorizer.LogOpponentPlayedCard(opponentCard);
+			}
+		}
+
+		public virtual void EndRound()
         {
-            //this.cardMemo = new CardMemoizer();
         }
 
-        public override void EndGame(bool amIWinner)
+		public virtual void EndGame(bool amIWinner)
         {
-            base.EndGame(amIWinner);
         }
 
-        private bool CloseGame(PlayerTurnContext context)
-        {
-            var shouldCloseGame = this.PlayerActionValidator.IsValid(PlayerAction.CloseGame(), context, this.Cards);
+		protected PlayerAction ChangeTrump()
+		{
+			this.CardMemorizer.LogTrumpChange();
+			return PlayerAction.ChangeTrump();
+		}
 
-            return shouldCloseGame;
-        }
-    }
+		protected PlayerAction PlayCard(Card card)
+		{
+			this.CardMemorizer.LogPlayedCard(card);
+			return PlayerAction.PlayCard(card);
+		}
+
+		protected PlayerAction CloseGame()
+		{
+			return PlayerAction.CloseGame();
+		}
+
+		private bool ShouldCloseGame(PlayerTurnContext context)
+		{
+			var shouldCloseGame = this.PlayerActionValidator.IsValid(PlayerAction.CloseGame(), context, this.CardMemorizer.GetMyHand());
+
+			return shouldCloseGame;
+		}
+	}
 }

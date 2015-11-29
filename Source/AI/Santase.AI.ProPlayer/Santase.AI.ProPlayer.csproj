@@ -42,6 +42,7 @@
     <Compile Include="CardMemorizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProPlayer.cs" />
+    <Compile Include="Tools\CardCollection.cs" />
     <Compile Include="Tools\Extensions\ExtensionsIEnumerable.cs" />
   </ItemGroup>
   <ItemGroup>

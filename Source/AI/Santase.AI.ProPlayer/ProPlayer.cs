@@ -187,32 +187,58 @@
             ICollection<Card> possibleCardsToPlay)
         {
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
-            var tempCards = this.CardMemorizer.UndiscoveredCards;
-
-            var allSpades = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Spade).ToList();
-            var allHearts = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Heart).ToList();
-            var allDiamonds = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Diamond).ToList();
-            var allClubs = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Club).ToList();
-
-            var test = tempCards.Where(x => x.Suit == CardSuit.Club).ToList();
-
+            var oponentCards = this.CardMemorizer.UndiscoveredCards;
             var myCards = this.CardMemorizer.MyHand;
-            var winningCards = new List<Card>();
-            foreach (var currentCard in myCards)
-            {
+            var myThrumpCardCount = myCards.Count(x => x.Suit == context.TrumpCard.Suit);
 
+            var winningCards = myCards.ToList();
+            
+            // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
+            var thrumpCardsRemain = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
+
+            foreach (var myCard in myCards)
+            {
+                var oponentHasWeakerCard = false;
+                foreach (var oponentCard in oponentCards)
+                {
+                    if(oponentCard.Suit == myCard.Suit)
+                    {
+                        if(oponentCard.GetValue() > myCard.GetValue())
+                        {
+                            winningCards.Remove(myCard);
+                        }
+                        else
+                        {
+                            oponentHasWeakerCard = true;
+                        }
+
+                    }
+                }
+
+                if (thrumpCardsRemain && winningCards.Contains(myCard) && !oponentHasWeakerCard)
+                {
+                    winningCards.Remove(myCard);
+                }
             }
+
 
             // Announce 40 or 20 if possible
 
-            // Smallest non-trump card
-            var cardToPlay =
-                possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
-                    .OrderBy(x => x.GetValue())
-                    .FirstOrDefault();
+            // Playing the cards that will win the hand
+            if(winningCards.Count != 0)
+            {
+                return this.PlayCard(winningCards.FirstOrDefault());
+            }
 
-            // Smallest card
-            return this.PlayCard(cardToPlay);
+            var thrumpCards = myCards.Where(x => x.Suit == context.TrumpCard.Suit).ToList();
+
+            if(thrumpCards.Count != 0)
+            {
+                return this.PlayCard(thrumpCards.FirstOrDefault());
+            }
+
+            return this.PlayCard(myCards.FirstOrDefault());
+            
         }
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context,  ICollection<Card> possibleCardsToPlay)

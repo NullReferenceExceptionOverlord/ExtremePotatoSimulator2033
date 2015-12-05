@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-	using System.Linq;
+    using System.Linq;
 
     using Logic;
     using Logic.Cards;
@@ -19,7 +19,7 @@
         {
             this.AnnounceValidator = new AnnounceValidator();
             this.PlayerActionValidator = new PlayerActionValidator();
-			this.CardWinnerLogic = new CardWinnerLogic();
+            this.CardWinnerLogic = new CardWinnerLogic();
         }
 
         protected bool IsFirstPlayer { get; set; }
@@ -42,7 +42,7 @@
 
         protected IPlayerActionValidator PlayerActionValidator { get; }
 
-		protected ICardWinnerLogic CardWinnerLogic { get; }
+        protected ICardWinnerLogic CardWinnerLogic { get; }
 
         public string Name => "Potato!";
 
@@ -64,12 +64,12 @@
         {
             this.IsFirstPlayer = context.IsFirstPlayerTurn;
 
-			if (context.CardsLeftInDeck == 0)
-			{
-				this.CardMemorizer.LogTrumpCardDrawn();
-			}
+            if (context.CardsLeftInDeck == 0)
+            {
+                this.CardMemorizer.LogTrumpCardDrawn();
+            }
 
-			var myHand = this.CardMemorizer.GetMyHand();
+            var myHand = this.CardMemorizer.GetMyHand();
             if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, myHand))
             {
                 return this.ChangeTrump();
@@ -101,9 +101,9 @@
                 this.OpponentPoints = context.FirstPlayerRoundPoints;
             }
 
-			Card opponentCard = this.GetOpponentCard(context);
+            Card opponentCard = this.GetOpponentCard(context);
 
-			if (opponentCard != null)
+            if (opponentCard != null)
             {
                 this.CardMemorizer.LogOpponentPlayedCard(opponentCard);
             }
@@ -153,24 +153,24 @@
             return this.MyHand.Sum(card => card.GetValue());
         }
 
-	    protected Card GetOpponentCard(PlayerTurnContext context)
-	    {
-		    return this.IsFirstPlayer ? context.SecondPlayedCard : context.FirstPlayedCard;
-	    }
+        protected Card GetOpponentCard(PlayerTurnContext context)
+        {
+            return this.IsFirstPlayer ? context.SecondPlayedCard : context.FirstPlayedCard;
+        }
 
-		private PlayerAction ChooseCard(PlayerTurnContext context)
-		{
-			var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.CardMemorizer.GetMyHand());
-			return context.State.ShouldObserveRules
-					   ? (this.IsFirstPlayer
-							  ? this.ChooseCardWhenPlayingFirstAndRulesApply(context, possibleCardsToPlay)
-							  : this.ChooseCardWhenPlayingSecondAndRulesApply(context, possibleCardsToPlay))
-					   : (this.IsFirstPlayer
-							  ? this.ChooseCardWhenPlayingFirstAndRulesDoNotApply(context, possibleCardsToPlay)
-							  : this.ChooseCardWhenPlayingSecondAndRulesDoNotApply(context, possibleCardsToPlay));
-		}
+        private PlayerAction ChooseCard(PlayerTurnContext context)
+        {
+            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.CardMemorizer.GetMyHand());
+            return context.State.ShouldObserveRules
+                       ? (this.IsFirstPlayer
+                              ? this.ChooseCardWhenPlayingFirstAndRulesApply(context, possibleCardsToPlay)
+                              : this.ChooseCardWhenPlayingSecondAndRulesApply(context, possibleCardsToPlay))
+                       : (this.IsFirstPlayer
+                              ? this.ChooseCardWhenPlayingFirstAndRulesDoNotApply(context, possibleCardsToPlay)
+                              : this.ChooseCardWhenPlayingSecondAndRulesDoNotApply(context, possibleCardsToPlay));
+        }
 
-		private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             // Announce 40 or 20 if possible
 
@@ -178,10 +178,10 @@
 
             // Smallest non-trump card from the shortest opponent suit
             // Should never happen
-    //        var cardToPlay =
-				//possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
-				//	.OrderBy(x => x.GetValue())
-				//	.FirstOrDefault();
+            //        var cardToPlay =
+            //possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
+            //	.OrderBy(x => x.GetValue())
+            //	.FirstOrDefault();
 
             var cardToPlay = this.GetWeakestCard(possibleCardsToPlay);
             return this.PlayCard(cardToPlay);
@@ -194,10 +194,10 @@
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.CardMemorizer.UndiscoveredCards;
             var myCards = this.CardMemorizer.MyHand;
-            var myThrumpCardCount = myCards.Count(x => x.Suit == context.TrumpCard.Suit);
+            var myThrumpCardCount = myCards.Count(x => this.IsTrumpCard(x));
 
             var winningCards = myCards.ToList();
-            
+
             // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
             var thrumpCardsRemain = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
 
@@ -206,11 +206,12 @@
                 var oponentHasWeakerCard = false;
                 foreach (var oponentCard in oponentCards)
                 {
-                    if(oponentCard.Suit == myCard.Suit)
+                    if (oponentCard.Suit == myCard.Suit)
                     {
-                        if(oponentCard.GetValue() > myCard.GetValue())
+                        if (oponentCard.GetValue() > myCard.GetValue())
                         {
                             winningCards.Remove(myCard);
+                            oponentHasWeakerCard = false;
                         }
                         else
                         {
@@ -230,65 +231,77 @@
             // Announce 40 or 20 if possible
 
             // Playing the cards that will win the hand
-            if(winningCards.Count != 0)
+            if (winningCards.Count != 0)
             {
                 return this.PlayCard(winningCards.FirstOrDefault());
             }
 
 
-            var thrumpCards = myCards.Where(x => x.Suit == context.TrumpCard.Suit).ToList();
+            var thrumpCards = myCards.Where(x => this.IsTrumpCard(x)).ToList();
 
-            if(thrumpCards.Count != 0)
+            if (thrumpCards.Count != 0)
             {
                 return this.PlayCard(thrumpCards.FirstOrDefault());
             }
 
             return this.PlayCard(myCards.FirstOrDefault());
-            
+
         }
 
-        private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context,  ICollection<Card> possibleCardsToPlay)
+        private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-			int possibleRemainingTurns = this.CalcPossibleRemainingTurns(context.State.ShouldObserveRules);
-			Card opponentCard = this.GetOpponentCard(context);
+            int possibleRemainingTurns = this.CalcPossibleRemainingTurns(context.State.ShouldObserveRules);
+            Card opponentCard = this.GetOpponentCard(context);
 
-			Card[] winningCards = this.GetWinningCards(possibleCardsToPlay, opponentCard)
-				.ToArray();
+            Card[] winningCards = this.GetWinningCards(possibleCardsToPlay, opponentCard)
+                .ToArray();
 
-			if (winningCards.Length == 0)
-			{
-				return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
-			}
+            if (winningCards.Length == 0)
+            {
+                return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
+            }
 
-			if (possibleRemainingTurns >= winningCards.Length)
-			{
-				Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
-				return this.PlayCard(card);
-			}
+            if (possibleRemainingTurns >= winningCards.Length)
+            {
+                Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
+                return this.PlayCard(card);
+            }
 
-			int startIndex = winningCards.Length - possibleRemainingTurns;
-			for (int i = startIndex; i < winningCards.Length; i++)
-			{
-				if (!this.IsTrumpCard(winningCards[i]))
-				{
-					return this.PlayCard(winningCards[i]);
-				}
-			}
+            int startIndex = winningCards.Length - possibleRemainingTurns;
+            for (int i = startIndex; i < winningCards.Length; i++)
+            {
+                if (!this.IsTrumpCard(winningCards[i]))
+                {
+                    return this.PlayCard(winningCards[i]);
+                }
+            }
 
-	        return this.PlayCard(winningCards[startIndex]);
+            return this.PlayCard(winningCards[startIndex]);
         }
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(
             PlayerTurnContext context,
             ICollection<Card> possibleCardsToPlay)
         {
-            // If bigger card is available => play it
 
-            // Play smallest trump card?
+            var thrumpCards = possibleCardsToPlay.Where(x => this.IsTrumpCard(x));
+            var otherCards = possibleCardsToPlay.Where(x => !this.IsTrumpCard(x));
 
-            // Smallest card
-            var cardToPlay = possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault();
-            return this.PlayCard(cardToPlay);
+            var possibleWinningCards = this.GetWinningCards(otherCards, context.FirstPlayedCard);
+
+            if (possibleWinningCards.Any())
+            {
+                return this.PlayCard(possibleWinningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
+            }
+            else if (thrumpCards.Any())
+            {
+                return this.PlayCard(thrumpCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+            }
+            else
+            {
+                return this.PlayCard(possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault());
+            }        
+
         }
 
         private PlayerAction TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
@@ -300,49 +313,50 @@
             return null;
         }
 
-	    protected IEnumerable<Card> GetWinningCards(IEnumerable<Card> cards, Card cardToBeat)
-	    {
-			return cards.Where(card => this.CardWinnerLogic.Winner(cardToBeat, card, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.SecondPlayer)
-				.OrderBy(card => card.GetValue());
-	    }
+        protected IEnumerable<Card> GetWinningCards(IEnumerable<Card> cards, Card cardToBeat)
+        {
+            return cards
+                .Where(card => this.CardWinnerLogic.Winner(cardToBeat, card, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.SecondPlayer)
+                .OrderBy(card => card.GetValue());
+        }
 
-	    protected int CalcPossibleRemainingTurns(bool deckIsClosed)
-	    {
-			int cardsToBePlayedCount = this.CardMemorizer.MyHand.Count;
+        protected int CalcPossibleRemainingTurns(bool deckIsClosed)
+        {
+            int cardsToBePlayedCount = this.CardMemorizer.MyHand.Count;
 
-			if (deckIsClosed)
-			{
-				return cardsToBePlayedCount;
-			}
+            if (deckIsClosed)
+            {
+                return cardsToBePlayedCount;
+            }
 
-			cardsToBePlayedCount += this.CardMemorizer.UndiscoveredCards.Count;
+            cardsToBePlayedCount += this.CardMemorizer.UndiscoveredCards.Count;
 
-			if (!this.CardMemorizer.TrumpCardDrawn)
-			{
-				cardsToBePlayedCount++;
-			}
+            if (!this.CardMemorizer.TrumpCardDrawn)
+            {
+                cardsToBePlayedCount++;
+            }
 
-		    return cardsToBePlayedCount / 2;
-	    }
+            return cardsToBePlayedCount / 2;
+        }
 
-	    protected Card GetWeakestCard(IEnumerable<Card> cards)
-	    {
-		    Card weakestCard = cards.First();
+        protected Card GetWeakestCard(IEnumerable<Card> cards)
+        {
+            Card weakestCard = cards.First();
 
-			foreach (var card in cards)
-			{
-				if ((this.IsTrumpCard(weakestCard) || !this.IsTrumpCard(card)) && (card.GetValue() < weakestCard.GetValue()))
-				{
-					weakestCard = card;
-				}
-			}
+            foreach (var card in cards)
+            {
+                if ((this.IsTrumpCard(weakestCard) || !this.IsTrumpCard(card)) && (card.GetValue() < weakestCard.GetValue()))
+                {
+                    weakestCard = card;
+                }
+            }
 
-			return weakestCard;
-	    }
+            return weakestCard;
+        }
 
-	    protected bool IsTrumpCard(Card card)
-	    {
-		    return card.Suit == this.CardMemorizer.TrumpCard.Suit;
-	    }
+        protected bool IsTrumpCard(Card card)
+        {
+            return card.Suit == this.CardMemorizer.TrumpCard.Suit;
+        }
     }
 }

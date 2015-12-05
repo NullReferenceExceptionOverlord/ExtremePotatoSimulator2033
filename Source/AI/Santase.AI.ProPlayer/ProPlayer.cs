@@ -141,26 +141,23 @@
 			return PlayerAction.CloseGame();
 		}
 
-		private bool ShouldCloseGame(PlayerTurnContext context)
+		protected virtual bool ShouldCloseGame(PlayerTurnContext context)
 		{
-            var myHand = this.CardMemorizer.GetMyHand();
-            var shouldCloseGame = this.PlayerActionValidator.IsValid(PlayerAction.CloseGame(), context, myHand);
-            if (shouldCloseGame)
-            {
-                var cardPoints = 0;
-                foreach (var card in myHand)
-                {
-                    cardPoints += card.GetValue();
-                }
+			bool canCloseGame = this.PlayerActionValidator.IsValid(PlayerAction.CloseGame(), context, this.CardMemorizer.GetMyHand());
 
-                if (!(cardPoints + this.MyPoints >= 60)) //TODO make it better
-                {
-                    return false;
-                }
+			if (canCloseGame)
+			{
+				int potentialPoints = this.MyPoints + this.CalcHandValue();
 
-            }
+				return potentialPoints >= 60;
+			}
 
-            return shouldCloseGame;
+			return false;
+		}
+
+		protected int CalcHandValue()
+		{
+			return this.MyHand.Sum(card => card.GetValue());
 		}
 	}
 }

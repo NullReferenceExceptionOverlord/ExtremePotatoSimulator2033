@@ -3,11 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
+	using System.Linq;
+
+    using Logic;
     using Logic.Cards;
     using Logic.Extensions;
     using Logic.PlayerActionValidate;
     using Logic.Players;
+    using Logic.WinnerLogic;
     using Tools.Extensions;
 
     public class ProPlayer : IPlayer
@@ -16,6 +19,7 @@
         {
             this.AnnounceValidator = new AnnounceValidator();
             this.PlayerActionValidator = new PlayerActionValidator();
+			this.CardWinnerLogic = new CardWinnerLogic();
         }
 
         protected bool IsFirstPlayer { get; set; }
@@ -37,6 +41,8 @@
         protected IAnnounceValidator AnnounceValidator { get; }
 
         protected IPlayerActionValidator PlayerActionValidator { get; }
+
+		protected ICardWinnerLogic CardWinnerLogic { get; }
 
         public string Name => "Potato!";
 
@@ -159,21 +165,18 @@
             return this.MyHand.Sum(card => card.GetValue());
         }
 
-        private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(
-            PlayerTurnContext context,
-            ICollection<Card> possibleCardsToPlay)
+        private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             // Announce 40 or 20 if possible
 
             // If the player is close to the win => play trump card which will surely win the trick
 
             // Smallest non-trump card from the shortest opponent suit
-
             // Should never happen
             var cardToPlay =
-    possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
-        .OrderBy(x => x.GetValue())
-        .FirstOrDefault();
+				possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
+					.OrderBy(x => x.GetValue())
+					.FirstOrDefault();
 
             cardToPlay = possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault();
             return this.PlayCard(cardToPlay);
@@ -197,9 +200,7 @@
             return this.PlayCard(cardToPlay);
         }
 
-        private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(
-          PlayerTurnContext context,
-          ICollection<Card> possibleCardsToPlay)
+        private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context,  ICollection<Card> possibleCardsToPlay)
         {
             // If bigger card is available => play it
             var biggerCard =
@@ -234,5 +235,22 @@
 
             return null;
         }
+
+	    protected IEnumerable<Card> GetWinningCards(IEnumerable<Card> cards, Card cardToBeat)
+	    {
+			return cards.Where(card => this.CardWinnerLogic.Winner(card, cardToBeat, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.FirstPlayer);
+	    }
+
+	    protected int CalcPossibleRemainingTurns()
+	    {
+			int cardsToBePlayedCount = this.CardMemorizer.MyHand.Count + this.CardMemorizer.UndiscoveredCards.Count;
+
+			if (!this.CardMemorizer.TrumpCardDrawn)
+			{
+				cardsToBePlayedCount++;
+			}
+
+		    return cardsToBePlayedCount / 2;
+	    }
     }
 }

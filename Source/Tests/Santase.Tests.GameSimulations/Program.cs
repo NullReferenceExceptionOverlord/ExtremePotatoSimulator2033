@@ -15,11 +15,11 @@
 		public static void Main()
         {
 			// For easier debugging start a single game:
-			var pro = new ProPlayer();
-			new SantaseGame(pro, new SmartPlayer()).Start();
+			//var pro = new ProPlayer();
+			//new SantaseGame(pro, new SmartPlayer()).Start();
 
-			//SimulateGames(new GenericGameSimulator<ProPlayer, SmartPlayer>());
-			//Console.WriteLine("Closed games: {0}", GlobalStats.GamesClosedByPlayer);
+			SimulateGames(new GenericGameSimulator<ProPlayer, SmartPlayer>());
+			Console.WriteLine("Closed games: {0}", GlobalStats.GamesClosedByPlayer);
 		}
 
 		private static void SimulateGames(IGameSimulator gameSimulator)

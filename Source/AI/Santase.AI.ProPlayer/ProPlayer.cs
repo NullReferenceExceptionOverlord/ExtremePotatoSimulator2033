@@ -2,13 +2,14 @@
 {
     using System;
     using System.Linq;
-	using System.IO;
+    using System.IO;
     using System.Collections.Generic;
 
     using Logic.Cards;
     using Logic.Extensions;
     using Logic.Players;
     using Logic.PlayerActionValidate;
+    using Tools.Extensions;
 
     public class ProPlayer : IPlayer
     {
@@ -68,8 +69,15 @@
 			}
 
             var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, myHand);
-            var shuffledCards = possibleCardsToPlay.Shuffle();
-            var cardToPlay = shuffledCards.First();
+            var cardToPlay = possibleCardsToPlay.First();
+            foreach (var card in possibleCardsToPlay)
+            {
+                if(cardToPlay.GetValue() > card.GetValue())
+                {
+                    cardToPlay = card;
+                }
+            }
+
 
             return this.PlayCard(cardToPlay);
         }

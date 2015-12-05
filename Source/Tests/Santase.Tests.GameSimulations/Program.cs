@@ -13,7 +13,7 @@
 		public const int DefaultSimulationsCount = 100000;
 
 		public static void Main()
-        {
+		{
 			// For easier debugging start a single game:
 			//var pro = new ProPlayer();
 			//new SantaseGame(pro, new SmartPlayer()).Start();

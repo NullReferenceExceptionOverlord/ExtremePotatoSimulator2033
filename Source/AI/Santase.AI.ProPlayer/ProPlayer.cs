@@ -19,6 +19,12 @@
 			this.PlayerActionValidator = new PlayerActionValidator();
         }
 
+		protected bool IsFirstPlayer { get; set; }
+
+		protected int MyPoints { get; set; }
+
+		protected int OpponentPoints { get; set; }
+
 		protected CardMemorizer CardMemorizer { get; set; }
 
 		protected IReadOnlyCollection<Card> MyHand
@@ -51,6 +57,8 @@
 
 		public virtual PlayerAction GetTurn(PlayerTurnContext context)
         {
+			this.IsFirstPlayer = context.IsFirstPlayerTurn;
+
 			var myHand = this.CardMemorizer.GetMyHand();
 
             if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, myHand))
@@ -78,7 +86,6 @@
                 }
             }
 
-
             return this.PlayCard(cardToPlay);
         }
 
@@ -88,8 +95,20 @@
 			{
 				this.CardMemorizer.LogTrumpChange();
 			}
-            this.Points = context.SecondPlayerRoundPoints;
-            Card opponentCard = this.CardMemorizer.MyLastPlayedCard.Equals(context.FirstPlayedCard) ? context.SecondPlayedCard : context.FirstPlayedCard;
+
+			Card opponentCard = context.SecondPlayedCard;
+            if (this.IsFirstPlayer)
+			{
+				this.MyPoints = context.FirstPlayerRoundPoints;
+				this.OpponentPoints = context.SecondPlayerRoundPoints;
+			}
+			else
+			{
+				this.MyPoints = context.SecondPlayerRoundPoints;
+				this.OpponentPoints = context.FirstPlayerRoundPoints;
+
+				opponentCard = context.FirstPlayedCard;
+			}
 
 			if (opponentCard != null)
 			{
@@ -97,22 +116,8 @@
 			}
 		}
 
-        public int Points { get; set; }
-
         public virtual void EndRound()
         {
-           this.Points = CountCardPoints(this.CardMemorizer.MyPlayedCards);
-        }
-
-        private int CountCardPoints(IReadOnlyCollection<Card> myPlayedCards)
-        {
-            var cardPoints = 0;
-            foreach (var card in myPlayedCards)
-            {
-                cardPoints += card.GetValue();
-            }
-
-            return cardPoints;
         }
 
         public virtual void EndGame(bool amIWinner)
@@ -148,7 +153,7 @@
                     cardPoints += card.GetValue();
                 }
 
-                if (!(cardPoints + this.Points >= 60)) //TODO make it better
+                if (!(cardPoints + this.MyPoints >= 60)) //TODO make it better
                 {
                     return false;
                 }
@@ -157,6 +162,5 @@
 
             return shouldCloseGame;
 		}
-
 	}
 }

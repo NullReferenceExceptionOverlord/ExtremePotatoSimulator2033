@@ -183,7 +183,22 @@
             PlayerTurnContext context,
             ICollection<Card> possibleCardsToPlay)
         {
-            // Find card that will surely win the trick
+            //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
+            var tempCards = this.CardMemorizer.UndiscoveredCards;
+
+            var allSpades = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Spade).ToList();
+            var allHearts = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Heart).ToList();
+            var allDiamonds = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Diamond).ToList();
+            var allClubs = this.CardMemorizer.MyHand.Where(x => x.Suit == CardSuit.Club).ToList();
+
+            var test = tempCards.Where(x => x.Suit == CardSuit.Club).ToList();
+
+            var myCards = this.CardMemorizer.MyHand;
+            var winningCards = new List<Card>();
+            foreach (var currentCard in myCards)
+            {
+
+            }
 
             // Announce 40 or 20 if possible
 

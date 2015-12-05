@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+	using System.IO;
     using System.Collections.Generic;
 
     using Logic.Cards;
@@ -15,7 +16,7 @@
         {
 			this.AnnounceValidator = new AnnounceValidator();
 			this.PlayerActionValidator = new PlayerActionValidator();
-		}
+        }
 
 		protected CardMemorizer CardMemorizer { get; set; }
 
@@ -49,7 +50,9 @@
 
 		public virtual PlayerAction GetTurn(PlayerTurnContext context)
         {
-            if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, this.CardMemorizer.GetMyHand()))
+			var myHand = this.CardMemorizer.GetMyHand();
+
+            if (this.PlayerActionValidator.IsValid(PlayerAction.ChangeTrump(), context, myHand))
             {
                 return this.ChangeTrump();
             }
@@ -59,7 +62,12 @@
                 return this.CloseGame();
             }
 
-            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.CardMemorizer.GetMyHand());
+			if (context.CardsLeftInDeck == 0)
+			{
+				this.CardMemorizer.LogTrumpCardDrawn();
+			}
+
+            var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, myHand);
             var shuffledCards = possibleCardsToPlay.Shuffle();
             var cardToPlay = shuffledCards.First();
 
@@ -68,7 +76,7 @@
 
 		public virtual void EndTurn(PlayerTurnContext context)
         {
-			if (this.CardMemorizer.TrumpCard != null && !this.CardMemorizer.TrumpCard.Equals(context.TrumpCard))
+			if (!this.CardMemorizer.TrumpCardDrawn && !this.CardMemorizer.TrumpCard.Equals(context.TrumpCard))
 			{
 				this.CardMemorizer.LogTrumpChange();
 			}

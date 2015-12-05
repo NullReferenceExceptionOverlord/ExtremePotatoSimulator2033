@@ -1,7 +1,7 @@
 ﻿namespace Santase.AI.ProPlayer
 {
 	using System;
-	using System.Linq;
+	using System.Text;
 	using System.Collections.Generic;
 
 	using Logic.Cards;
@@ -30,7 +30,7 @@
 
         public static readonly Tools.CardCollection AllCards = new Tools.CardCollection();
 
-		private Tools.CardCollection remainingCards;
+		private Tools.CardCollection undiscoveredCards;
 
 		private Tools.CardCollection myHand;
 
@@ -53,9 +53,9 @@
 		{
 			this.TrumpCard = trumpCard;
 			this.RemainingTrumpCardsCount = 0;
-			this.TrumpSuit = this.TrumpCard.Suit;
+			this.TrumpCardDrawn = false;
 
-			this.remainingCards = new Tools.CardCollection();
+			this.undiscoveredCards = new Tools.CardCollection();
 			this.myHand = new Tools.CardCollection();
 			this.myPlayedCards = new Tools.CardCollection();
 			this.opponentPlayedCards = new Tools.CardCollection();
@@ -73,7 +73,7 @@
 				}
 				else
 				{
-					this.remainingCards.Add(card);
+					this.undiscoveredCards.Add(card);
 
 					if (card.Suit == this.TrumpCard.Suit)
 					{
@@ -88,19 +88,19 @@
 			}
 		}
 
-		public CardSuit TrumpSuit { get; private set; }
-
 		public Card TrumpCard { get; private set; }
 
 		public Card OldTrumpCard { get; private set; }
 
+		public bool TrumpCardDrawn { get; private set; }
+
 	    public int RemainingTrumpCardsCount { get; private set; }
 
-	    public IReadOnlyCollection<Card> RemainingCards
+	    public IReadOnlyCollection<Card> UndiscoveredCards
 	    {
 		    get
 		    {
-			    return this.remainingCards;
+			    return this.undiscoveredCards;
 		    }
 	    }
 
@@ -141,7 +141,7 @@
 
 			if (card.Equals(this.TrumpCard))
 			{
-				this.TrumpCard = null;
+				this.TrumpCardDrawn = true;
 			}
 			else
 			{
@@ -153,6 +153,8 @@
 
 	    public void LogPlayedCard(Card card)
 	    {
+			CardMemorizer.ValidateCardNotNull(card);
+
 			bool removed = this.myHand.Remove(card);
 
 			if (!removed)
@@ -169,7 +171,7 @@
 	    {
 			CardMemorizer.ValidateCardNotNull(card);
 
-			bool isTrumpCard = this.TrumpCard != null && this.TrumpCard.Equals(card);
+			bool isTrumpCard = card.Equals(this.TrumpCard);
 
 			if (!isTrumpCard && !card.Equals(this.OldTrumpCard))
 			{
@@ -178,7 +180,7 @@
 
 			if (isTrumpCard)
 			{
-				this.TrumpCard = null;
+				this.TrumpCardDrawn = true;
 			}
 
 			this.opponentPlayedCards.Add(card);
@@ -193,17 +195,22 @@
 				this.myHand.Remove(lowestTrump);
 				this.myHand.Add(this.TrumpCard);
 			}
-			else if (this.remainingCards.Contains(lowestTrump))
+			else if (this.undiscoveredCards.Contains(lowestTrump))
 			{
 				this.NewCardDicovered(lowestTrump);
 			}
 			else
 			{
-				throw new ArgumentException("The lowest trump card has alredy benn played.");
+				throw new ArgumentException("The lowest trump card has alredy been played.");
 			}
 
 			this.OldTrumpCard = this.TrumpCard;
 			this.TrumpCard = lowestTrump;
+	    }
+
+	    public void LogTrumpCardDrawn()
+	    {
+		    this.TrumpCardDrawn = true;
 	    }
 
 		private static void ValidateCardNotNull(Card card)
@@ -216,17 +223,47 @@
 
 		private void NewCardDicovered(Card card)
 	    {
-			bool removed = this.remainingCards.Remove(card);
+			bool removed = this.undiscoveredCards.Remove(card);
 
 			if (!removed)
 			{
-				throw new ArgumentException($"Card Must be present in {nameof(this.RemainingCards)}.");
+				throw new ArgumentException($"Card Must be present in {nameof(this.UndiscoveredCards)}.");
 			}
 
-			if (card.Suit == this.TrumpSuit)
+			if (card.Suit == this.TrumpCard.Suit)
 			{
 				this.RemainingTrumpCardsCount--;
 			}
+		}
+
+		public override string ToString()
+		{
+			StringBuilder result = new StringBuilder();
+
+			const string Separator = ": ";
+			const string ListingSeparator = ", ";
+
+
+			result.AppendLine(nameof(this.UndiscoveredCards) + Separator);
+			result.AppendLine(string.Join(ListingSeparator, this.UndiscoveredCards));
+
+			result.AppendLine(nameof(this.MyHand) + Separator);
+			result.AppendLine(string.Join(ListingSeparator, this.MyHand));
+
+			result.AppendLine(nameof(this.MyPlayedCards) + Separator);
+			result.AppendLine(string.Join(ListingSeparator, this.MyPlayedCards));
+
+			result.AppendLine(nameof(this.OpponentPlayedCards) + Separator);
+			result.AppendLine(string.Join(ListingSeparator, this.OpponentPlayedCards));
+
+			result.AppendLine(nameof(this.MyLastPlayedCard) + Separator + this.MyLastPlayedCard);
+
+			result.AppendLine(nameof(this.TrumpCard) + Separator + this.TrumpCard);
+			result.AppendLine(nameof(this.OldTrumpCard) + Separator + this.OldTrumpCard);
+			result.AppendLine(nameof(this.TrumpCardDrawn) + Separator + this.TrumpCardDrawn);
+			result.AppendLine(nameof(this.RemainingTrumpCardsCount) + Separator + this.RemainingTrumpCardsCount);
+
+			return result.ToString();
 		}
 	}
 }

@@ -15,10 +15,11 @@
 		public static void Main()
         {
 			// For easier debugging start a single game:
-			//new SantaseGame(new ProPlayer(), new SmartPlayer()).Start();
+			var pro = new ProPlayer();
+			new SantaseGame(pro, new SmartPlayer()).Start();
 
-			SimulateGames(new GenericGameSimulator<ProPlayer, SmartPlayer>());
-			Console.WriteLine("Closed games: {0}", GlobalStats.GamesClosedByPlayer);
+			//SimulateGames(new GenericGameSimulator<ProPlayer, SmartPlayer>());
+			//Console.WriteLine("Closed games: {0}", GlobalStats.GamesClosedByPlayer);
 		}
 
 		private static void SimulateGames(IGameSimulator gameSimulator)
@@ -35,7 +36,6 @@
             Console.WriteLine(
                 $"Total round points (Our player): {simulationResult.FirstPlayerTotalRoundPoints:0,0} - {simulationResult.SecondPlayerTotalRoundPoints:0,0}");
             Console.WriteLine(new string('=', 75));
-
             Console.ReadKey();
         }
     }

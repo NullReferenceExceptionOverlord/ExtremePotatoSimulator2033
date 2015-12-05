@@ -252,22 +252,30 @@
 			int possibleRemainingTurns = this.CalcPossibleRemainingTurns(context.State.ShouldObserveRules);
 			Card opponentCard = this.GetOpponentCard(context);
 
-			var winningCards = this.GetWinningCards(possibleCardsToPlay, opponentCard);
-			int winningCardsCount = winningCards.Count();
+			Card[] winningCards = this.GetWinningCards(possibleCardsToPlay, opponentCard)
+				.ToArray();
 
-			if (winningCardsCount == 0)
+			if (winningCards.Length == 0)
 			{
 				return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
 			}
 
-			Card card = winningCards.First();
-	        if (possibleRemainingTurns < winningCardsCount)
-	        {
-				card = winningCards.Reverse()
-					.ElementAt(possibleRemainingTurns - 1);
+			if (possibleRemainingTurns >= winningCards.Length)
+			{
+				Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
+				return this.PlayCard(card);
 			}
 
-            return this.PlayCard(card);
+			int startIndex = winningCards.Length - possibleRemainingTurns;
+			for (int i = startIndex; i < winningCards.Length; i++)
+			{
+				if (!this.IsTrumpCard(winningCards[i]))
+				{
+					return this.PlayCard(winningCards[i]);
+				}
+			}
+
+	        return this.PlayCard(winningCards[startIndex]);
         }
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(
@@ -294,17 +302,8 @@
 
 	    protected IEnumerable<Card> GetWinningCards(IEnumerable<Card> cards, Card cardToBeat)
 	    {
-			return cards.Where(card => this.CardWinnerLogic.Winner(card, cardToBeat, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.FirstPlayer)
-				.OrderBy(card => card.GetValue())
-				.ThenBy(card =>
-				{
-					if (card.Suit == this.CardMemorizer.TrumpCard.Suit)
-					{
-						return 1;
-					}
-
-					return 0;
-				});
+			return cards.Where(card => this.CardWinnerLogic.Winner(cardToBeat, card, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.SecondPlayer)
+				.OrderBy(card => card.GetValue());
 	    }
 
 	    protected int CalcPossibleRemainingTurns(bool deckIsClosed)
@@ -332,13 +331,18 @@
 
 			foreach (var card in cards)
 			{
-				if (card.Suit != this.CardMemorizer.TrumpCard.Suit && (card.GetValue() < weakestCard.GetValue()))
+				if ((this.IsTrumpCard(weakestCard) || !this.IsTrumpCard(card)) && (card.GetValue() < weakestCard.GetValue()))
 				{
 					weakestCard = card;
 				}
 			}
 
 			return weakestCard;
+	    }
+
+	    protected bool IsTrumpCard(Card card)
+	    {
+		    return card.Suit == this.CardMemorizer.TrumpCard.Suit;
 	    }
     }
 }

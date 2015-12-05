@@ -8,9 +8,9 @@
     using Logic.Cards;
     using Logic.Extensions;
     using Logic.Players;
-	using Logic.PlayerActionValidate;
+    using Logic.PlayerActionValidate;
 
-	public class ProPlayer : IPlayer
+    public class ProPlayer : IPlayer
     {
 		public ProPlayer()
         {
@@ -80,8 +80,8 @@
 			{
 				this.CardMemorizer.LogTrumpChange();
 			}
-
-			Card opponentCard = this.CardMemorizer.MyLastPlayedCard.Equals(context.FirstPlayedCard) ? context.SecondPlayedCard : context.FirstPlayedCard;
+            this.Points = context.SecondPlayerRoundPoints;
+            Card opponentCard = this.CardMemorizer.MyLastPlayedCard.Equals(context.FirstPlayedCard) ? context.SecondPlayedCard : context.FirstPlayedCard;
 
 			if (opponentCard != null)
 			{
@@ -89,11 +89,25 @@
 			}
 		}
 
-		public virtual void EndRound()
+        public int Points { get; set; }
+
+        public virtual void EndRound()
         {
+           this.Points = CountCardPoints(this.CardMemorizer.MyPlayedCards);
         }
 
-		public virtual void EndGame(bool amIWinner)
+        private int CountCardPoints(IReadOnlyCollection<Card> myPlayedCards)
+        {
+            var cardPoints = 0;
+            foreach (var card in myPlayedCards)
+            {
+                cardPoints += card.GetValue();
+            }
+
+            return cardPoints;
+        }
+
+        public virtual void EndGame(bool amIWinner)
         {
         }
 
@@ -116,9 +130,25 @@
 
 		private bool ShouldCloseGame(PlayerTurnContext context)
 		{
-			var shouldCloseGame = this.PlayerActionValidator.IsValid(PlayerAction.CloseGame(), context, this.CardMemorizer.GetMyHand());
+            var myHand = this.CardMemorizer.GetMyHand();
+            var shouldCloseGame = this.PlayerActionValidator.IsValid(PlayerAction.CloseGame(), context, myHand);
+            if (shouldCloseGame)
+            {
+                var cardPoints = 0;
+                foreach (var card in myHand)
+                {
+                    cardPoints += card.GetValue();
+                }
 
-			return shouldCloseGame;
+                if (!(cardPoints + this.Points >= 60)) //TODO make it better
+                {
+                    return false;
+                }
+
+            }
+
+            return shouldCloseGame;
 		}
+
 	}
 }

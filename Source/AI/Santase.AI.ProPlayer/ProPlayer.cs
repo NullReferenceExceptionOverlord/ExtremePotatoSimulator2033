@@ -79,7 +79,7 @@
             var cardToPlay = possibleCardsToPlay.First();
             foreach (var card in possibleCardsToPlay)
             {
-                if(cardToPlay.GetValue() > card.GetValue())
+                if (cardToPlay.GetValue() > card.GetValue())
                 {
                     cardToPlay = card;
                 }
@@ -157,6 +157,82 @@
         protected int CalcHandValue()
         {
             return this.MyHand.Sum(card => card.GetValue());
+        }
+
+        private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(
+            PlayerTurnContext context,
+            ICollection<Card> possibleCardsToPlay)
+        {
+            // Announce 40 or 20 if possible
+
+            // If the player is close to the win => play trump card which will surely win the trick
+
+            // Smallest non-trump card from the shortest opponent suit
+
+            // Should never happen
+            var cardToPlay =
+    possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
+        .OrderBy(x => x.GetValue())
+        .FirstOrDefault();
+
+            cardToPlay = possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault();
+            return this.PlayCard(cardToPlay);
+        }
+
+        private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(
+            PlayerTurnContext context,
+            ICollection<Card> possibleCardsToPlay)
+        {
+            // Find card that will surely win the trick
+
+            // Announce 40 or 20 if possible
+
+            // Smallest non-trump card
+            var cardToPlay =
+                possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
+                    .OrderBy(x => x.GetValue())
+                    .FirstOrDefault();
+
+            // Smallest card
+            return this.PlayCard(cardToPlay);
+        }
+
+        private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(
+          PlayerTurnContext context,
+          ICollection<Card> possibleCardsToPlay)
+        {
+            // If bigger card is available => play it
+            var biggerCard =
+                possibleCardsToPlay.Where(
+                    x => x.Suit == context.FirstPlayedCard.Suit && x.GetValue() > context.FirstPlayedCard.GetValue())
+                    .OrderByDescending(x => x.GetValue())
+                    .FirstOrDefault();
+
+            // Smallest card
+            var smallestCard = possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault();
+            return this.PlayCard(smallestCard);
+        }
+
+        private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(
+            PlayerTurnContext context,
+            ICollection<Card> possibleCardsToPlay)
+        {
+            // If bigger card is available => play it
+
+            // Play smallest trump card?
+
+            // Smallest card
+            var cardToPlay = possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault();
+            return this.PlayCard(cardToPlay);
+        }
+
+        private PlayerAction TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        {
+            // Choose card with announce 40 if possible          
+
+            // Choose card with announce 20 if possible
+
+            return null;
         }
     }
 }

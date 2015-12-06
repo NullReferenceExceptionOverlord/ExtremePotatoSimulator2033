@@ -141,8 +141,8 @@
             if (canCloseGame)
             {
                 int potentialPoints = this.MyPoints + this.CalcHandValue();
-
-                return potentialPoints >= 64;
+                var myThrumpCardCount = this.CardMemorizer.GetMyHand().Count(x => x.Suit == context.TrumpCard.Suit);
+                return potentialPoints >= 64 && myThrumpCardCount >= 3;
             }
 
             return false;

@@ -165,7 +165,6 @@
                               : this.ChooseCardWhenPlayingSecondAndRulesDoNotApply(context, possibleCardsToPlay));
         }
 
-
 	    protected Card GetOpponentCard(PlayerTurnContext context)
 	    {
 		    return this.IsFirstPlayer ? context.SecondPlayedCard : context.FirstPlayedCard;
@@ -173,14 +172,18 @@
 
 		private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
 		{
-			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+			//var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
 
-			if (anounce != null)
-			{
-				return anounce;
-			}
+			//if (anounce != null)
+			//{
+			//	return anounce;
+			//}
 
-			return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
+			//var byWinChance = possibleCardsToPlay.OrderBy(this.CountPotentialWins);
+
+
+			return this.ChooseCardWhenPlayingFirstAndRulesApply(context, possibleCardsToPlay);
+			//return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
 		}
 
         private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
@@ -276,8 +279,8 @@
                 }
             }
 
-            return this.PlayCard(winningCards[startIndex]);
-        }
+			return this.PlayCard(winningCards[startIndex]);
+		}
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
@@ -368,8 +371,7 @@
             return card.Suit == this.CardMemorizer.TrumpCard.Suit;
         }
 
-
-	    protected int CountPotentioalWins(Card card)
+	    protected int CountPotentialWins(Card card)
 	    {
 			int count = 0;
 

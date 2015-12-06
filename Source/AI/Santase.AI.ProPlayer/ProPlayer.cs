@@ -179,30 +179,44 @@
             var myCards = this.CardMemorizer.MyHand;
 			var possibleWins = new Dictionary<Card, int>();
 
-			//foreach (var myCard in myCards)
-			//{
-			//	possibleWins[myCard] = this.CountPotentialWins(myCard);
-			//}
-			//var winningCards = myCards.Where(c => possibleWins[c] != 0);
+            //foreach (var myCard in myCards)
+            //{
+            //    possibleWins[myCard] = this.CountPotentialWins(myCard);
+            //}
+            //var winningCards = myCards.Where(c => possibleWins[c] != 0);
 
-			var winningCards = myCards.ToList();
-			foreach (var myCard in myCards)
-			{
-				foreach (var oponentCard in oponentCards)
-				{
-					if (oponentCard.Suit == myCard.Suit)
-					{
-						if (oponentCard.GetValue() > myCard.GetValue())
-						{
-							winningCards.Remove(myCard);
-						}
-					}
-				}
-			}
-
-			// Playing the cards that will win the hand
-			if (winningCards.Any())
+            var winningCards = myCards.ToList();
+            foreach (var myCard in myCards)
             {
+                foreach (var oponentCard in oponentCards)
+                {
+                    if (oponentCard.Suit == myCard.Suit)
+                    {
+                        if (oponentCard.GetValue() > myCard.GetValue())
+                        {
+                            winningCards.Remove(myCard);
+                        }
+                    }
+                }
+            }
+
+            var test = winningCards.Where(x => this.IsTrumpCard(x)).OrderBy(x => x.GetValue());
+            if (test.Any())
+            {
+                return this.PlayCard(test.FirstOrDefault());
+            }
+            // Playing the cards that will win the hand
+            if (winningCards.Count != 0)
+            {
+                foreach (var card in winningCards)
+                {
+                    var anounc = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+
+                    if (anounc != null)
+                    {
+                        return anounc;
+                    }
+                }
                 return this.PlayCard(winningCards.FirstOrDefault());
             }
 

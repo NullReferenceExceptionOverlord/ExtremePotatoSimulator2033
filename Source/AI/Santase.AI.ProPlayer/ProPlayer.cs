@@ -175,7 +175,7 @@
             //TODO second method to deal with closing game before the deck is empty!!!!
 
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
-            var oponentCards = this.CardMemorizer.UndiscoveredCards;
+            var oponentCards = this.GetPossibleOpponentCards();
             var myCards = this.CardMemorizer.MyHand;
             var myThrumpCardCount = myCards.Count(x => this.IsTrumpCard(x));
 
@@ -408,7 +408,9 @@
 	    {
 			int count = 0;
 
-			foreach (var opponentCard in this.CardMemorizer.UndiscoveredCards)
+			var opponentCards = this.GetPossibleOpponentCards();
+
+			foreach (var opponentCard in opponentCards)
 			{
 				if (this.CardWinnerLogic.Winner(card, opponentCard, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.FirstPlayer)
 				{
@@ -416,12 +418,23 @@
 				}
 			}
 
-			if (this.CardMemorizer.OldTrumpCard != null && this.CardWinnerLogic.Winner(card, this.CardMemorizer.OldTrumpCard, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.FirstPlayer)
+			return count;
+	    }
+
+	    protected IReadOnlyCollection<Card> GetPossibleOpponentCards()
+	    {
+			if (this.CardMemorizer.OldTrumpCard == null)
 			{
-				count++;
+				return this.CardMemorizer.UndiscoveredCards;
 			}
 
-			return count;
+			var result = new Tools.CardCollection();
+
+			this.CardMemorizer.UndiscoveredCards.ForEach(result.Add);
+
+			result.Add(this.CardMemorizer.OldTrumpCard);
+
+			return result;
 	    }
     }
 }

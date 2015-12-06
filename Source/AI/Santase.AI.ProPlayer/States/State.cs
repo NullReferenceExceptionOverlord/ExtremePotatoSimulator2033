@@ -1,10 +1,9 @@
-using Santase.Logic.Cards;
-
 namespace Santase.AI.ProPlayer.States
 {
 	using System.Collections.Generic;
 
 	using Logic.Players;
+	using Logic.Cards;
 
 	public abstract class State : IState
 	{

@@ -17,7 +17,6 @@ namespace Santase.AI.ProPlayer.States
 
 		protected override PlayerAction ChooseCard(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
 		{
-			var opponentCards = this.Bot.GetPossibleOpponentCards();
 			var myCards = this.Bot.CardMemorizer.MyHand.OrderBy(c => c.GetValue());
 			//var possibleWins = new System.Collections.Generic.Dictionary<Card, int>();
 
@@ -26,20 +25,7 @@ namespace Santase.AI.ProPlayer.States
 			//	possibleWins[myCard] = this.Bot.CountPotentialWins(myCard);
 			//}
 
-			var winningCards = myCards.ToList();
-			foreach (var myCard in myCards)
-			{
-				foreach (var oponentCard in opponentCards)
-				{
-					if (oponentCard.Suit == myCard.Suit)
-					{
-						if (oponentCard.GetValue() > myCard.GetValue())
-						{
-							winningCards.Remove(myCard);
-						}
-					}
-				}
-			}
+			var winningCards = this.Bot.GetWinningCardsWhenFirst(possibleCardsToPlay);
 
 			var anounce = this.Bot.GetPossibleBestAnounce(possibleCardsToPlay);
 

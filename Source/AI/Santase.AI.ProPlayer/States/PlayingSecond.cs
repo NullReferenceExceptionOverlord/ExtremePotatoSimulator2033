@@ -18,7 +18,7 @@ namespace Santase.AI.ProPlayer.States
 		{
 			Card opponentCard = this.Bot.GetOpponentCard(context);
 
-			var winningCards = this.Bot.GetWinningCards(possibleCardsToPlay, opponentCard);
+			var winningCards = this.Bot.GetWinningCardsWhenSecond(possibleCardsToPlay, opponentCard);
 
 			if (!winningCards.Any())
 			{

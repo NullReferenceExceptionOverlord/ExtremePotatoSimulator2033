@@ -253,33 +253,26 @@
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-            int possibleRemainingTurns = this.CalcPossibleRemainingTurns(context.State.ShouldObserveRules);
             Card opponentCard = this.GetOpponentCard(context);
 
-            Card[] winningCards = this.GetWinningCards(possibleCardsToPlay, opponentCard)
-                .ToArray();
+            var winningCards = this.GetWinningCards(possibleCardsToPlay, opponentCard);
 
-            if (winningCards.Length == 0)
-            {
-                return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
-            }
+			if (!winningCards.Any())
+			{
+				return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
+			}
 
-            if (possibleRemainingTurns >= winningCards.Length)
-            {
-                Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
-                return this.PlayCard(card);
-            }
+            int possibleRemainingTurns = this.CalcPossibleRemainingTurns(context.State.ShouldObserveRules);
 
-            int startIndex = winningCards.Length - possibleRemainingTurns;
-            for (int i = startIndex; i < winningCards.Length; i++)
-            {
-                if (!this.IsTrumpCard(winningCards[i]))
-                {
-                    return this.PlayCard(winningCards[i]);
-                }
-            }
+			int skip = winningCards.Count() - possibleRemainingTurns;
 
-			return this.PlayCard(winningCards[startIndex]);
+			skip = skip > 0 ? skip : 0;
+
+			winningCards = winningCards.Skip(skip)
+				.Take(possibleRemainingTurns);
+
+			Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
+			return this.PlayCard(card);
 		}
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)

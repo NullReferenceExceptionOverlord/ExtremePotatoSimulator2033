@@ -185,6 +185,8 @@
 
         private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
+            //TODO second method to deal with closing game before the deck is empty!!!!
+
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.CardMemorizer.UndiscoveredCards;
             var myCards = this.CardMemorizer.MyHand;
@@ -193,10 +195,12 @@
             var winningCards = myCards.ToList();
 
             // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
-            var thrumpCardsRemain = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
-            if(context.CardsLeftInDeck != 0)
+            var oponentHasThrumpCards = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
+
+            //Make-believe logic - > will go in that second method 
+            if (context.CardsLeftInDeck <= 2)
             {
-                thrumpCardsRemain = true;
+                oponentHasThrumpCards = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount - 1 > 0;
             }
 
             foreach (var myCard in myCards)
@@ -219,7 +223,7 @@
                     }
                 }
 
-                if (thrumpCardsRemain && winningCards.Contains(myCard) && !oponentHasWeakerCard)
+                if (oponentHasThrumpCards && winningCards.Contains(myCard) && !oponentHasWeakerCard)
                 {
                     winningCards.Remove(myCard);
                 }
@@ -240,17 +244,8 @@
                 return this.PlayCard(winningCards.FirstOrDefault());
             }
 
-
-            var thrumpCards = myCards.Where(x => this.IsTrumpCard(x)).ToList();
-
-            if (thrumpCards.Count != 0)
-            {
-                return this.PlayCard(thrumpCards.FirstOrDefault());
-            }
-
             // Likely we will lose the hand so just give the lowest card
             return this.PlayCard(myCards.OrderBy(x => x.GetValue()).FirstOrDefault());
-
         }
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
@@ -286,19 +281,18 @@
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-
-            var thrumpCards = possibleCardsToPlay.Where(x => this.IsTrumpCard(x));
-            var otherCards = possibleCardsToPlay.Where(x => !this.IsTrumpCard(x));
-
-            var possibleWinningCards = this.GetWinningCards(otherCards, context.FirstPlayedCard);
-
-            if (possibleWinningCards.Any())
+            var winningCards = this.GetWinningCards(possibleCardsToPlay, context.FirstPlayedCard);
+            var winningThrumps = winningCards.Where(x => this.IsTrumpCard(x));
+            if (winningCards.Any())
             {
-                return this.PlayCard(possibleWinningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
-            }
-            else if (thrumpCards.Any())
-            {
-                return this.PlayCard(thrumpCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+                // If there are thrumps in possiblCardsToPlay (when we have thrumps in there that means that we have to "cakame" (we dont have cards of the "boq" that the oponent played))
+                if (winningThrumps.Any())
+                {
+                    //So we want to take the hand with the smallest thrump we have
+                    return this.PlayCard(winningCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+                }              
+                 
+                return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
             }
             else
             {

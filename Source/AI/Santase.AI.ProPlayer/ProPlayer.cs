@@ -179,13 +179,12 @@
             var myCards = this.CardMemorizer.MyHand.OrderBy(c => c.GetValue());
 			var possibleWins = new Dictionary<Card, int>();
 
-            //foreach (var myCard in myCards)
-            //{
-            //    possibleWins[myCard] = this.CountPotentialWins(myCard);
-            //}
-            //var winningCards = myCards.Where(c => possibleWins[c] != 0);
+			foreach (var myCard in myCards)
+			{
+				possibleWins[myCard] = this.CountPotentialWins(myCard);
+			}
 
-            var winningCards = myCards.ToList();
+			var winningCards = myCards.ToList();
             foreach (var myCard in myCards)
             {
                 foreach (var oponentCard in oponentCards)
@@ -200,20 +199,27 @@
                 }
             }
 
-            if (winningCards.Any())
-            {
-				Card card = winningCards.FirstOrDefault(this.IsTrumpCard) ?? winningCards.First();
-                return this.PlayCard(card);
-            }
+			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+
+			if (winningCards.Any())
+			{
+				if (anounce != null && winningCards.Contains(anounce))
+				{
+					return this.PlayCard(anounce);
+				}
+
+				Card card = winningCards.FirstOrDefault(this.IsTrumpCard) ?? winningCards.Reverse<Card>().First();
+				return this.PlayCard(card);
+			}
+
+			if (anounce != null)
+			{
+				return this.PlayCard(anounce);
+			}
 			// Playing the cards that will win the hand
 
-			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
-            if (anounce != null)
-            {
-                return anounce;
-            }
 
-            // Likely we will lose the hand so just give the lowest card
+			// Likely we will lose the hand so just give the lowest card
 			Card result = myCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? myCards.First();
             return this.PlayCard(result);
         }
@@ -270,7 +276,7 @@
 
 			if (anounce != null)
 			{
-				return anounce;
+				return this.PlayCard(anounce);
 			}
 
             // Playing the cards that will win the hand
@@ -337,13 +343,13 @@
 
 		}
 
-        private PlayerAction TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        private Card TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
 			foreach (var card in possibleCardsToPlay)
 			{
 				if (card.Type == CardType.Queen && this.AnnounceValidator.GetPossibleAnnounce(possibleCardsToPlay, card, this.CardMemorizer.TrumpCard) == Announce.Forty)
 				{
-					return this.PlayCard(card);
+					return card;
 				}
 			}
 
@@ -351,7 +357,7 @@
 			{
 				if (card.Type == CardType.Queen && this.AnnounceValidator.GetPossibleAnnounce(possibleCardsToPlay, card, this.CardMemorizer.TrumpCard) == Announce.Twenty)
 				{
-					return this.PlayCard(card);
+					return card;
 				}
 			}
 

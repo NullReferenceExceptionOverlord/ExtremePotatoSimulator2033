@@ -226,27 +226,14 @@
 
         private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-            //TODO second method to deal with closing game before the deck is empty!!!!
-
-            //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.CardMemorizer.UndiscoveredCards;
             var myCards = this.CardMemorizer.MyHand.OrderBy(c => c.GetValue()); ;
             var myThrumpCardCount = myCards.Count(x => this.IsTrumpCard(x));
 
             var winningCards = myCards.ToList();
 
-            // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
-            var oponentHasThrumpCards = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
-
-            //Make-believe logic - > will go in that second method 
-            if (context.CardsLeftInDeck <= 2)
-            {
-                oponentHasThrumpCards = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount - 1 > 0;
-            }
-
             foreach (var myCard in myCards)
             {
-                var oponentHasWeakerCard = false;
                 foreach (var oponentCard in oponentCards)
                 {
                     if (oponentCard.Suit == myCard.Suit)
@@ -254,22 +241,12 @@
                         if (oponentCard.GetValue() > myCard.GetValue())
                         {
                             winningCards.Remove(myCard);
-                            oponentHasWeakerCard = false;
-                        }
-                        else
-                        {
-                            oponentHasWeakerCard = true;
                         }
 
                     }
                 }
 
-                if (oponentHasThrumpCards && winningCards.Contains(myCard) && !oponentHasWeakerCard)
-                {
-                    winningCards.Remove(myCard);
-                }
             }
-
 
             // Announce 40 or 20 if possible
 			var anounce = this.GetPossibleBestAnounce(possibleCardsToPlay);

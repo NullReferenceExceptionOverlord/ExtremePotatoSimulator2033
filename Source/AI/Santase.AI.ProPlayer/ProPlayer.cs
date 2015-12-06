@@ -153,11 +153,6 @@
             return this.MyHand.Sum(card => card.GetValue());
         }
 
-        protected Card GetOpponentCard(PlayerTurnContext context)
-        {
-            return this.IsFirstPlayer ? context.SecondPlayedCard : context.FirstPlayedCard;
-        }
-
         private PlayerAction ChooseCard(PlayerTurnContext context)
         {
             var possibleCardsToPlay = this.PlayerActionValidator.GetPossibleCardsToPlay(context, this.CardMemorizer.GetMyHand());
@@ -170,26 +165,25 @@
                               : this.ChooseCardWhenPlayingSecondAndRulesDoNotApply(context, possibleCardsToPlay));
         }
 
-        private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
-        {
-            // Announce 40 or 20 if possible
 
-            // If the player is close to the win => play trump card which will surely win the trick
+	    protected Card GetOpponentCard(PlayerTurnContext context)
+	    {
+		    return this.IsFirstPlayer ? context.SecondPlayedCard : context.FirstPlayedCard;
+	    }
 
-            // Smallest non-trump card from the shortest opponent suit
-            // Should never happen
-            //        var cardToPlay =
-            //possibleCardsToPlay.Where(x => x.Suit != context.TrumpCard.Suit)
-            //	.OrderBy(x => x.GetValue())
-            //	.FirstOrDefault();
+		private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+		{
+			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
 
-            var cardToPlay = this.GetWeakestCard(possibleCardsToPlay);
-            return this.PlayCard(cardToPlay);
-        }
+			if (anounce != null)
+			{
+				return anounce;
+			}
 
-        private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(
-            PlayerTurnContext context,
-            ICollection<Card> possibleCardsToPlay)
+			return this.PlayCard(this.GetWeakestCard(possibleCardsToPlay));
+		}
+
+        private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.CardMemorizer.UndiscoveredCards;
@@ -233,6 +227,12 @@
 
 
             // Announce 40 or 20 if possible
+			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+
+			if (anounce != null)
+			{
+				return anounce;
+			}
 
             // Playing the cards that will win the hand
             if (winningCards.Count != 0)
@@ -284,9 +284,7 @@
             return this.PlayCard(winningCards[startIndex]);
         }
 
-        private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(
-            PlayerTurnContext context,
-            ICollection<Card> possibleCardsToPlay)
+        private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
 
             var thrumpCards = possibleCardsToPlay.Where(x => this.IsTrumpCard(x));
@@ -311,9 +309,21 @@
 
         private PlayerAction TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-            // Choose card with announce 40 if possible          
+			foreach (var card in possibleCardsToPlay)
+			{
+				if (card.Type == CardType.Queen && this.AnnounceValidator.GetPossibleAnnounce(possibleCardsToPlay, card, this.CardMemorizer.TrumpCard) == Announce.Forty)
+				{
+					return this.PlayCard(card);
+				}
+			}
 
-            // Choose card with announce 20 if possible
+			foreach (var card in possibleCardsToPlay)
+			{
+				if (card.Type == CardType.Queen && this.AnnounceValidator.GetPossibleAnnounce(possibleCardsToPlay, card, this.CardMemorizer.TrumpCard) == Announce.Twenty)
+				{
+					return this.PlayCard(card);
+				}
+			}
 
             return null;
         }
@@ -363,5 +373,26 @@
         {
             return card.Suit == this.CardMemorizer.TrumpCard.Suit;
         }
+
+
+	    protected int CountPotentioalWins(Card card)
+	    {
+			int count = 0;
+
+			foreach (var opponentCard in this.CardMemorizer.UndiscoveredCards)
+			{
+				if (this.CardWinnerLogic.Winner(card, opponentCard, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.FirstPlayer)
+				{
+					count++;
+				}
+			}
+
+			if (this.CardMemorizer.OldTrumpCard != null && this.CardWinnerLogic.Winner(card, this.CardMemorizer.OldTrumpCard, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.FirstPlayer)
+			{
+				count++;
+			}
+
+			return count;
+	    }
     }
 }

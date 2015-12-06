@@ -200,6 +200,10 @@
 
             // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
             var thrumpCardsRemain = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
+            if(context.CardsLeftInDeck != 0)
+            {
+                thrumpCardsRemain = true;
+            }
 
             foreach (var myCard in myCards)
             {
@@ -244,7 +248,8 @@
                 return this.PlayCard(thrumpCards.FirstOrDefault());
             }
 
-            return this.PlayCard(myCards.FirstOrDefault());
+            // Likely we will lose the hand so just give the lowest card
+            return this.PlayCard(myCards.OrderBy(x => x.GetValue()).FirstOrDefault());
 
         }
 

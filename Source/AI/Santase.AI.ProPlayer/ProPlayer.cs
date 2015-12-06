@@ -311,10 +311,13 @@
 
 			int skip = winningCards.Count() - possibleRemainingTurns;
 
-			skip = skip > 0 ? skip : 0;
+			//skip = skip > 0 ? skip : 0;
 
-			winningCards = winningCards.Skip(skip)
-				.Take(possibleRemainingTurns);
+			winningCards = winningCards
+				.Reverse()
+				//.Skip(skip)
+				//.Take(possibleRemainingTurns)
+				;
 
 			Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
 			return this.PlayCard(card);
@@ -322,27 +325,30 @@
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
-            var winningCards = this.GetWinningCards(possibleCardsToPlay, context.FirstPlayedCard);
+			return ChooseCardWhenPlayingSecondAndRulesDoNotApply(context, possibleCardsToPlay);
+			//var winningCards = this.GetWinningCards(possibleCardsToPlay, context.FirstPlayedCard);
 
-            var shouldPlayNormalCardsBeforeThrumps = winningCards.Count(x => !this.IsTrumpCard(x)) > 0;
-            if (winningCards.Any())
-            {
-                if (shouldPlayNormalCardsBeforeThrumps)
-                {
-                    return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
-                }
-                else
-                {
-                    return this.PlayCard(winningCards.OrderBy(x => x.GetValue()).FirstOrDefault());
-                }
+			//var shouldPlayNormalCardsBeforeThrumps = winningCards.Count(x => !this.IsTrumpCard(x)) > 0;
+			//if (winningCards.Any())
+			//{
+			//    if (shouldPlayNormalCardsBeforeThrumps)
+			//    {
+			//        return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
+			//    }
+			//    else
+			//    {
+			//        return this.PlayCard(winningCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+			//    }
 
-            }
-            else
-            {
-                return this.PlayCard(possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault());
-            }        
+			//}
+			//else
+			//{
+			//    return this.PlayCard(possibleCardsToPlay.OrderBy(x => x.GetValue()).FirstOrDefault());
+			//}        
 
-        }
+
+
+		}
 
         private PlayerAction TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {

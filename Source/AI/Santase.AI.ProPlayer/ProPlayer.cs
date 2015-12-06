@@ -323,16 +323,15 @@
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             var winningCards = this.GetWinningCards(possibleCardsToPlay, context.FirstPlayedCard);
-            var winningThrumps = winningCards.Where(x => this.IsTrumpCard(x));
+            var areThrumpCards = winningCards.Count(x => this.IsTrumpCard(x)) > 0;
+
             if (winningCards.Any())
-            {
-                // If there are thrumps in possiblCardsToPlay (when we have thrumps in there that means that we have to "cakame" (we dont have cards of the "boq" that the oponent played))
-                if (winningThrumps.Any())
+            {       
+                if(areThrumpCards)
                 {
-                    //So we want to take the hand with the smallest thrump we have
-                    return this.PlayCard(winningCards.OrderBy(x => x.GetValue()).FirstOrDefault());
-                }              
-                 
+                    return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
+                }
+
                 return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
             }
             else

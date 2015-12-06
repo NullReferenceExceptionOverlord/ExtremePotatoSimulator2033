@@ -24,7 +24,7 @@
 
 		private static void SimulateGames(IGameSimulator gameSimulator)
         {
-			int simulationsCount = 100; // DefaultSimulationsCount
+			int simulationsCount = 1000; // DefaultSimulationsCount
 
 			Console.WriteLine($"Running {gameSimulator.GetType().Name}...");
 

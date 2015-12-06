@@ -323,16 +323,19 @@
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
         {
             var winningCards = this.GetWinningCards(possibleCardsToPlay, context.FirstPlayedCard);
-            var areThrumpCards = winningCards.Count(x => this.IsTrumpCard(x)) > 0;
 
+            var shouldPlayNormalCardsBeforeThrumps = winningCards.Count(x => !this.IsTrumpCard(x)) > 0;
             if (winningCards.Any())
-            {       
-                if(areThrumpCards)
+            {
+                if (shouldPlayNormalCardsBeforeThrumps)
                 {
                     return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
                 }
+                else
+                {
+                    return this.PlayCard(winningCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+                }
 
-                return this.PlayCard(winningCards.OrderByDescending(x => x.GetValue()).FirstOrDefault());
             }
             else
             {

@@ -176,7 +176,7 @@
 
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.GetPossibleOpponentCards();
-            var myCards = this.CardMemorizer.MyHand;
+            var myCards = this.CardMemorizer.MyHand.OrderBy(c => c.GetValue());
 			var possibleWins = new Dictionary<Card, int>();
 
             //foreach (var myCard in myCards)
@@ -200,36 +200,21 @@
                 }
             }
 
-            var test = winningCards.Where(x => this.IsTrumpCard(x)).OrderBy(x => x.GetValue());
-            if (test.Any())
+            if (winningCards.Any())
             {
-                return this.PlayCard(test.FirstOrDefault());
+				Card card = winningCards.FirstOrDefault(this.IsTrumpCard) ?? winningCards.First();
+                return this.PlayCard(card);
             }
-            // Playing the cards that will win the hand
-            if (winningCards.Count != 0)
-            {
-                foreach (var card in winningCards)
-                {
-                    var anounc = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+			// Playing the cards that will win the hand
 
-                    if (anounc != null)
-                    {
-                        return anounc;
-                    }
-                }
-                return this.PlayCard(winningCards.FirstOrDefault());
-            }
-
-            var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
             if (anounce != null)
             {
                 return anounce;
             }
 
             // Likely we will lose the hand so just give the lowest card
-            var byValue = myCards.OrderBy(c => c.GetValue());
-			Card result = byValue.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? byValue.First();
-
+			Card result = myCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? myCards.First();
             return this.PlayCard(result);
         }
 

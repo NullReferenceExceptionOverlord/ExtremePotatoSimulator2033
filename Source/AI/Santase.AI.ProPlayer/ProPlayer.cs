@@ -197,7 +197,12 @@
                 }
             }
 
-            // Announce 40 or 20 if possible
+            // Playing the cards that will win the hand
+            if (winningCards.Count != 0)
+            {
+                return this.PlayCard(winningCards.FirstOrDefault());
+            }
+
             var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
 
             if (anounce != null)
@@ -205,15 +210,9 @@
                 return anounce;
             }
 
-            // Playing the cards that will win the hand
-            if (winningCards.Count != 0)
-            {
-                return this.PlayCard(winningCards.FirstOrDefault());
-            }
+            // Likely we will lose the hand so just give the lowest card
 
-			// Likely we will lose the hand so just give the lowest card
-
-			var byValue = myCards.OrderBy(c => c.GetValue());
+            var byValue = myCards.OrderBy(c => c.GetValue());
 			Card result = byValue.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? byValue.First();
 
             return this.PlayCard(result);

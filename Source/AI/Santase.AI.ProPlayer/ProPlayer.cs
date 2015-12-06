@@ -142,7 +142,7 @@
             {
                 int potentialPoints = this.MyPoints + this.CalcHandValue();
 
-                return potentialPoints >= 60;
+                return potentialPoints >= 64;
             }
 
             return false;

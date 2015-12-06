@@ -22,15 +22,15 @@
             this.CardWinnerLogic = new CardWinnerLogic();
         }
 
-        protected bool IsFirstPlayer { get; set; }
+		public bool IsFirstPlayer { get; set; }
 
-        protected int MyPoints { get; set; }
+		public int MyPoints { get; set; }
 
-        protected int OpponentPoints { get; set; }
+		public int OpponentPoints { get; set; }
 
-        protected CardMemorizer CardMemorizer { get; set; }
+		public CardMemorizer CardMemorizer { get; set; }
 
-        protected IReadOnlyCollection<Card> MyHand
+		public IReadOnlyCollection<Card> MyHand
         {
             get
             {
@@ -38,11 +38,11 @@
             }
         }
 
-        protected IAnnounceValidator AnnounceValidator { get; }
+		public IAnnounceValidator AnnounceValidator { get; }
 
-        protected IPlayerActionValidator PlayerActionValidator { get; }
+		public IPlayerActionValidator PlayerActionValidator { get; }
 
-        protected ICardWinnerLogic CardWinnerLogic { get; }
+        public ICardWinnerLogic CardWinnerLogic { get; }
 
         public string Name => "Potato!";
 
@@ -123,7 +123,7 @@
             return PlayerAction.ChangeTrump();
         }
 
-        protected PlayerAction PlayCard(Card card)
+        public PlayerAction PlayCard(Card card)
         {
             this.CardMemorizer.LogPlayedCard(card);
             return PlayerAction.PlayCard(card);
@@ -148,7 +148,7 @@
             return false;
         }
 
-        protected int CalcHandValue()
+        public int CalcHandValue()
         {
             return this.MyHand.Sum(card => card.GetValue());
         }
@@ -165,18 +165,16 @@
                               : this.ChooseCardWhenPlayingSecondAndRulesDoNotApply(context, possibleCardsToPlay));
         }
 
-	    protected Card GetOpponentCard(PlayerTurnContext context)
+	    public Card GetOpponentCard(PlayerTurnContext context)
 	    {
 		    return this.IsFirstPlayer ? context.SecondPlayedCard : context.FirstPlayedCard;
 	    }
 
 		private PlayerAction ChooseCardWhenPlayingFirstAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
 		{
-            //TODO second method to deal with closing game before the deck is empty!!!!
-
-            //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
-            var oponentCards = this.GetPossibleOpponentCards();
-            var myCards = this.CardMemorizer.MyHand.OrderBy(c => c.GetValue());
+			//Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
+			var opponentCards = this.GetPossibleOpponentCards();
+			var myCards = this.CardMemorizer.MyHand.OrderBy(c => c.GetValue());
 			var possibleWins = new Dictionary<Card, int>();
 
 			foreach (var myCard in myCards)
@@ -187,7 +185,7 @@
 			var winningCards = myCards.ToList();
             foreach (var myCard in myCards)
             {
-                foreach (var oponentCard in oponentCards)
+                foreach (var oponentCard in opponentCards)
                 {
                     if (oponentCard.Suit == myCard.Suit)
                     {
@@ -208,7 +206,7 @@
 					return this.PlayCard(anounce);
 				}
 
-				Card card = winningCards.FirstOrDefault(this.IsTrumpCard) ?? winningCards.Reverse<Card>().First();
+				Card card = winningCards.FirstOrDefault(this.IsTrumpCard) ?? winningCards.First();
 				return this.PlayCard(card);
 			}
 
@@ -290,6 +288,13 @@
 				//.Take(possibleRemainingTurns)
 				;
 
+			//Card firstCard = winningCards.First();
+			//if (firstCard.GetValue() + opponentCard.GetValue() + this.MyPoints >= 66)
+			//{
+			//	return this.PlayCard(firstCard);
+			//}
+
+
 			Card card = winningCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? winningCards.First();
 			return this.PlayCard(card);
 		}
@@ -321,7 +326,7 @@
 
 		}
 
-        private Card GetPossibleBestAnounce(ICollection<Card> possibleCardsToPlay)
+        public Card GetPossibleBestAnounce(ICollection<Card> possibleCardsToPlay)
         {
 			foreach (var card in possibleCardsToPlay)
 			{
@@ -347,14 +352,14 @@
             return null;
         }
 
-        protected IEnumerable<Card> GetWinningCards(IEnumerable<Card> cards, Card cardToBeat)
+        public IEnumerable<Card> GetWinningCards(IEnumerable<Card> cards, Card cardToBeat)
         {
             return cards
                 .Where(card => this.CardWinnerLogic.Winner(cardToBeat, card, this.CardMemorizer.TrumpCard.Suit) == PlayerPosition.SecondPlayer)
                 .OrderBy(card => card.GetValue());
         }
 
-        protected int CalcPossibleRemainingTurns(bool deckIsClosed)
+        public int CalcPossibleRemainingTurns(bool deckIsClosed)
         {
             int cardsToBePlayedCount = this.CardMemorizer.MyHand.Count;
 
@@ -373,7 +378,7 @@
             return cardsToBePlayedCount / 2;
         }
 
-        protected Card GetWeakestCard(IEnumerable<Card> cards)
+        public Card GetWeakestCard(IEnumerable<Card> cards)
         {
             Card weakestCard = cards.First();
 
@@ -388,12 +393,12 @@
             return weakestCard;
         }
 
-        protected bool IsTrumpCard(Card card)
+        public bool IsTrumpCard(Card card)
         {
             return card.Suit == this.CardMemorizer.TrumpCard.Suit;
         }
 
-	    protected int CountPotentialWins(Card card)
+	    public int CountPotentialWins(Card card)
 	    {
 			int count = 0;
 
@@ -410,7 +415,7 @@
 			return count;
 	    }
 
-	    protected IReadOnlyCollection<Card> GetPossibleOpponentCards()
+	    public IReadOnlyCollection<Card> GetPossibleOpponentCards()
 	    {
 			if (this.CardMemorizer.OldTrumpCard == null)
 			{

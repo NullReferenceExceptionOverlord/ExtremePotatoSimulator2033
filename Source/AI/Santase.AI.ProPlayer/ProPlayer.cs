@@ -199,7 +199,7 @@
                 }
             }
 
-			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+			var anounce = this.GetPossibleBestAnounce(possibleCardsToPlay);
 
 			if (winningCards.Any())
 			{
@@ -272,7 +272,7 @@
 
 
             // Announce 40 or 20 if possible
-			var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
+			var anounce = this.GetPossibleBestAnounce(possibleCardsToPlay);
 
 			if (anounce != null)
 			{
@@ -343,11 +343,16 @@
 
 		}
 
-        private Card TryToAnnounce20Or40(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)
+        private Card GetPossibleBestAnounce(ICollection<Card> possibleCardsToPlay)
         {
 			foreach (var card in possibleCardsToPlay)
 			{
-				if (card.Type == CardType.Queen && this.AnnounceValidator.GetPossibleAnnounce(possibleCardsToPlay, card, this.CardMemorizer.TrumpCard) == Announce.Forty)
+				if (!this.IsTrumpCard(card))
+				{
+					continue;
+				}
+
+				if (card.Type == CardType.King && possibleCardsToPlay.Any(c => c.Suit == card.Suit && c.Type == CardType.Queen))
 				{
 					return card;
 				}
@@ -355,7 +360,7 @@
 
 			foreach (var card in possibleCardsToPlay)
 			{
-				if (card.Type == CardType.Queen && this.AnnounceValidator.GetPossibleAnnounce(possibleCardsToPlay, card, this.CardMemorizer.TrumpCard) == Announce.Twenty)
+				if (card.Type == CardType.King && possibleCardsToPlay.Any(c => c.Suit == card.Suit && c.Type == CardType.Queen))
 				{
 					return card;
 				}

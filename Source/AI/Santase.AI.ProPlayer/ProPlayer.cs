@@ -182,17 +182,9 @@
             var winningCards = myCards.ToList();
 
             // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
-            var oponentHasThrumpCards = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount > 0;
-
-            //Make-believe logic - > will go in that second method 
-            if (context.CardsLeftInDeck <= 2)
-            {
-                oponentHasThrumpCards = this.CardMemorizer.RemainingTrumpCardsCount - myThrumpCardCount - 1 > 0;
-            }
 
             foreach (var myCard in myCards)
             {
-                var oponentHasWeakerCard = false;
                 foreach (var oponentCard in oponentCards)
                 {
                     if (oponentCard.Suit == myCard.Suit)
@@ -200,18 +192,10 @@
                         if (oponentCard.GetValue() > myCard.GetValue())
                         {
                             winningCards.Remove(myCard);
-                            oponentHasWeakerCard = false;
                         }
-                        else
-                        {
-                            oponentHasWeakerCard = true;
-                        }
-
                     }
                 }
-
             }
-
 
             // Announce 40 or 20 if possible
             var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
@@ -227,8 +211,12 @@
                 return this.PlayCard(winningCards.FirstOrDefault());
             }
 
-            // Likely we will lose the hand so just give the lowest card
-            return this.PlayCard(myCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+			// Likely we will lose the hand so just give the lowest card
+
+			var byValue = myCards.OrderBy(c => c.GetValue());
+			Card result = byValue.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? byValue.First();
+
+            return this.PlayCard(result);
         }
 
         private PlayerAction ChooseCardWhenPlayingFirstAndRulesApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)

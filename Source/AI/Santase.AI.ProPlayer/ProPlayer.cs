@@ -230,7 +230,7 @@
 
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.CardMemorizer.UndiscoveredCards;
-            var myCards = this.CardMemorizer.MyHand;
+            var myCards = this.CardMemorizer.MyHand.OrderBy(c => c.GetValue()); ;
             var myThrumpCardCount = myCards.Count(x => this.IsTrumpCard(x));
 
             var winningCards = myCards.ToList();
@@ -282,11 +282,12 @@
             // Playing the cards that will win the hand
             if (winningCards.Count != 0)
             {
-                return this.PlayCard(winningCards.FirstOrDefault());
+                return this.PlayCard(winningCards.FirstOrDefault(this.IsTrumpCard) ?? winningCards.Reverse<Card>().First());
             }
 
             // Likely we will lose the hand so just give the lowest card
-            return this.PlayCard(myCards.OrderBy(x => x.GetValue()).FirstOrDefault());
+            Card result = myCards.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? myCards.First();
+            return this.PlayCard(result);
         }
 
         private PlayerAction ChooseCardWhenPlayingSecondAndRulesDoNotApply(PlayerTurnContext context, ICollection<Card> possibleCardsToPlay)

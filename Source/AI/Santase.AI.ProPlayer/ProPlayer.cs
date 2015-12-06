@@ -177,41 +177,42 @@
             //Determine all the cards in our hand that will win (will word great for when the deck has ended/ will work very shittly when the game is closed and the deck has many cards!)
             var oponentCards = this.GetPossibleOpponentCards();
             var myCards = this.CardMemorizer.MyHand;
-            var myThrumpCardCount = myCards.Count(x => this.IsTrumpCard(x));
+			var possibleWins = new Dictionary<Card, int>();
 
-            var winningCards = myCards.ToList();
+			//foreach (var myCard in myCards)
+			//{
+			//	possibleWins[myCard] = this.CountPotentialWins(myCard);
+			//}
+			//var winningCards = myCards.Where(c => possibleWins[c] != 0);
 
-            // Take out our thrump cards out of the total remaining -> checks if the oponent has thrump cards
+			var winningCards = myCards.ToList();
+			foreach (var myCard in myCards)
+			{
+				foreach (var oponentCard in oponentCards)
+				{
+					if (oponentCard.Suit == myCard.Suit)
+					{
+						if (oponentCard.GetValue() > myCard.GetValue())
+						{
+							winningCards.Remove(myCard);
+						}
+					}
+				}
+			}
 
-            foreach (var myCard in myCards)
-            {
-                foreach (var oponentCard in oponentCards)
-                {
-                    if (oponentCard.Suit == myCard.Suit)
-                    {
-                        if (oponentCard.GetValue() > myCard.GetValue())
-                        {
-                            winningCards.Remove(myCard);
-                        }
-                    }
-                }
-            }
-
-            // Playing the cards that will win the hand
-            if (winningCards.Count != 0)
+			// Playing the cards that will win the hand
+			if (winningCards.Any())
             {
                 return this.PlayCard(winningCards.FirstOrDefault());
             }
 
             var anounce = this.TryToAnnounce20Or40(context, possibleCardsToPlay);
-
             if (anounce != null)
             {
                 return anounce;
             }
 
             // Likely we will lose the hand so just give the lowest card
-
             var byValue = myCards.OrderBy(c => c.GetValue());
 			Card result = byValue.FirstOrDefault(c => !this.IsTrumpCard(c)) ?? byValue.First();
 
